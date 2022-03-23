@@ -49,7 +49,7 @@ class HelpCommand(commands.HelpCommand):
                     page = await self.new_help_page()
                     page.add_field(name=f"**{cogName}**", value=cogDesc, emoji=cogEmoji, inline=False) # Add cog field
         embeds.append(page)
-        await paged.send_paged(self.get_destination(), embeds, self.context.author0)
+        await paged.send_paged(self.get_destination(), embeds, self.context.author)
 
     async def send_command_help(self,command):
         if not isinstance(command,commands.Cog):
