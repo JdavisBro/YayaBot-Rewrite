@@ -11,8 +11,6 @@ import yaya
 
 logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=logging.INFO)
 
-TOKEN = None
-
 def no_token():
     logging.error("Token could not be found, it must be the first line of `TOKEN.txt`.")
     exit()
@@ -20,14 +18,14 @@ def no_token():
 def get_token():
     if os.path.exists("TOKEN.txt"):
         with open("TOKEN.txt","r") as f:
-            TOKEN = f.readline().strip()
+            token = f.readline().strip()
     else:
         no_token()
 
-    if not TOKEN:
+    if not token:
         no_token()
 
-    return TOKEN
+    return token
 
 class YayaBot(commands.Bot):
     def __init__(self):
@@ -101,10 +99,10 @@ async def about(ctx):
     await ctx.send(embed=embed)
 
 while True:
-    TOKEN = get_token()
+    token = get_token()
     bot = YayaBot()
     bot.add_command(about)
-    bot.run(TOKEN)
+    bot.run(token)
     if bot._restart:
         logging.info("Restarting in 3 seconds...")
         time.sleep(3)
