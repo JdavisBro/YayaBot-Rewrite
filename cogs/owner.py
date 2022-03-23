@@ -30,7 +30,7 @@ class Owner(commands.Cog):
     @commands.command(brief=":arrows_counterclockwise:")
     @commands.is_owner()
     async def restart(self, ctx):
-        """Restarts the bot! Current does not reload bot.py"""
+        """Restarts the bot! Currently does not reload bot.py"""
         await ctx.send("🏃‍♂️ Be right back!")
         await self.bot.restart()
 
