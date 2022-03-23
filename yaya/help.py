@@ -71,9 +71,9 @@ class HelpCommand(commands.HelpCommand):
         
         if isinstance(command,commands.Group) or isinstance(command,commands.Cog):
             value = "**Subcommands**" if isinstance(command,commands.Group) else "**Commands**"
-            embed.add_field(name="———————", value=value, inline=False)
+            embed.add_field(name="_ _", value=value, emoji="✴️", inline=False)
             for subcommand in await self.filter_commands(command.commands, sort=True): # This breaks if there are too many subcommands
-                embed = await self.create_help_field(self.context,embed,subcommand,useEmoji)
+                await self.create_help_field(self.context,embed,subcommand)
         
         await self.get_destination().send(embed=embed)
 

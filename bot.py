@@ -6,6 +6,7 @@ import platform
 import logging
 import discord
 from discord.ext import commands
+import aiosqlite
 
 import yaya
 
@@ -44,15 +45,27 @@ class YayaBot(commands.Bot):
         self.loaded_extensions.append(name)
         logging.info(f"{name} loaded.")
 
+    async def unload_extension(self, name):
+        await super().unload_extension(name)
+        self.loaded_extensions.remove(name)
+        logging.info(f"{name} unloaded.")
+
     async def sql_init(self):
-        pass
+        self.connection = await aiosqlite.connect("database.db")
+        await self.connection.execute("CREATE TABLE IF NOT EXISTS extensions (extension TEXT PRIMARY KEY)")
+        await self.connection.commit()
 
     async def load_extensions(self):
         default_extensions = [ # They are tuples for SQL
-            ("cogs.owner",)
+            ("cogs.owner",),
         ]
-        # get extensions from sql
-        for ex in default_extensions:
+        async with self.connection.execute("SELECT * FROM extensions") as cursor:
+            extensions = await cursor.fetchall()
+            if not extensions:
+                await cursor.executemany("INSERT INTO extensions(extension) VALUES (?)", default_extensions)
+                extensions = default_extensions
+        await self.connection.commit()
+        for ex in extensions:
             try:
                 await self.load_extension(ex[0])
             except commands.ExtensionNotFound:
@@ -70,7 +83,7 @@ class YayaBot(commands.Bot):
         raise error
 
     async def close(self):
-        # close sql here
+        await self.connection.close()
         await super().close()
 
     async def restart(self):

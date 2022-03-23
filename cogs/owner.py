@@ -1,4 +1,6 @@
 import logging
+import typing
+import os
 
 import discord
 from discord.ext import commands
@@ -15,6 +17,7 @@ class Owner(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.connection = bot.connection
         self.emoji = "👑"
 
     async def cog_load(self):
@@ -40,3 +43,129 @@ class Owner(commands.Cog):
         embed.add_field(name="Status:", value="*beatboxing wildly*", emoji=":wrench:")
         embed.add_field(name="Boxes:", value="eaten", emoji=":tools:")
         await ctx.send(embed=embed)
+
+    @commands.group(aliases = ['c'], brief=":gear:")
+    @commands.is_owner()
+    async def cog(self,ctx):
+        """Commands to add, reload and remove cogs."""
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(ctx.command)
+
+    @cog.command(aliases = ['l'], brief=":inbox_tray:")
+    async def load(self,ctx,*cogs):
+        """Loads a cog."""
+        for cog in cogs:
+            cog = f"cogs.{cog}"
+            cursor = await self.connection.execute("SELECT * FROM extensions WHERE extension = ?", (cog,))
+            inDb = await cursor.fetchone()
+            inDb = (inDb is not None)
+            loadCog = (cog not in self.bot.extensions.keys())
+            if ((not loadCog) and inDb):
+                await ctx.send(f"Cog `{cog}` is already loaded.")
+                return
+            if loadCog:
+                try:
+                    await self.bot.load_extension(cog)
+                except commands.ExtensionNotFound:
+                    await ctx.send(f"Cog `{cog}` could not be found.")
+                    continue
+                except:
+                    await ctx.send(f"Loading cog `{cog}` failed")
+                    raise
+            if not inDb:
+                await cursor.execute("INSERT INTO extensions(extension) VALUES(?)", (cog,))
+                await self.connection.commit()
+            await ctx.send(f"Cog `{cog}` {'loaded' if loadCog else ''}{' and ' if (loadCog and not inDb) else ''}{'added to database' if not inDb else ''}.")
+            await cursor.close()
+
+    @cog.command(aliases = ['u'], brief=":outbox_tray: ")
+    async def unload(self,ctx,*cogs):
+        """Unloads a cog."""
+        for cog in cogs:
+            if cog == 'owner':
+                await ctx.send("Cannot unload owner.")
+                return
+            cog = f"cogs.{cog}"
+            cursor = await self.connection.execute("SELECT count(*) FROM extensions WHERE extension = ?", (cog,))
+            inDb = await cursor.fetchone()
+            inDb = (inDb is not None)
+            unloadCog = (cog in self.bot.extensions.keys())
+            if not (unloadCog and inDb):
+                await ctx.send(f"Cog {cog} is not loaded.")
+                return
+            if unloadCog:
+                try:
+                    await self.bot.unload_extension(cog)
+                except:
+                    await ctx.send(f"Unloading cog `{cog}` failed")
+                    raise
+            if inDb:
+                await cursor.execute("DELETE FROM extensions WHERE extension=?", (cog,))
+                await self.connection.commit()
+            await cursor.close()
+            await ctx.send(f"Cog {cog} {'unloaded' if unloadCog else ''}{' and ' if (unloadCog and inDb) else ''}{'removed from database' if inDb else ''}.")
+
+    @cog.command(aliases = ['r'], brief=":arrows_counterclockwise: ")
+    async def reload(self,ctx,*cogs:typing.Optional[str]):
+        """Reloads cogs."""
+        allReloaded = False
+        if not cogs:
+            if self.bot.previousReload is None:
+                await ctx.send("Please specify a cog!")
+                return
+            else:
+                cogs = self.bot.previousReload
+        if cogs[0] in ["*","all"]:
+            cogs = [cog.split(".")[1] for cog in self.bot.extensions.keys()]
+            allReloaded = True
+        notLoaded = []
+        loaded = []
+        for cog in cogs:
+            try:
+                await self.bot.reload_extension(f"cogs.{cog}")
+                logging.info(f"{cog} reloaded.")
+                loaded.append(cog)
+            except commands.ExtensionNotLoaded:
+                notLoaded.append(cog)
+                continue
+            except:
+                await ctx.send(f"Error while reloading {cog}.")
+                raise
+        await ctx.send(f"{'Cog '+', '.join(loaded)+' reloaded.' if loaded else ''}{(' Cog '+', '.join(notLoaded)+' was not found so not reloaded.') if notLoaded else ''}")
+        if allReloaded:
+            self.bot.previousReload = ["*"]
+        else:
+            self.bot.previousReload = loaded
+
+    @cog.command(name="list",aliases=["ls"], brief=":gear: ")
+    async def cogs_list(self,ctx):
+        """Lists loaded and unloaded cogs."""
+        loaded_cogs = ['.'.join(cog.split(".")[1:]) for cog in self.bot.loaded_extensions]
+        unloaded_cogs = []
+        visited = []
+        for d, _, files in os.walk("cogs",followlinks=True):
+            if os.path.realpath(d) in visited:
+                logging.warning("There is infinite recursion in your cogs folder, there is a link to the cog folder or a parent folder of it, this limits the amount of folders we can search for cogs. To fix this remove the links.")
+                break
+            visited.append(os.path.realpath(d))
+            for f in files:
+                if d != "cogs":
+                    f = d.replace("/",".")[5:] + "." + f
+                if f[:-3] not in loaded_cogs and f.endswith(".py"):
+                    unloaded_cogs.append("`"+f[:-3]+"`")
+
+            emojia = ":gear: "
+            emojib = ":wrench: "
+            emojic = ":tools: "
+
+        embed = yaya.Embed(ctx.guild.id, bot=self.bot, title="Cogs.", emoji=":gear:")
+        embed.add_field(name="Loaded Cogs:", value=", ".join(["`"+c+"`" for c in loaded_cogs])+".", emoji=":wrench:", inline=False)
+        embed.add_field(name="Unloaded Cogs:", value=", ".join(unloaded_cogs)+".", emoji=":tools:", inline=False)
+        await ctx.send(embed=embed)
+
+    @commands.command(name="reload", brief=":arrows_counterclockwise: ")
+    @commands.is_owner()
+    async def reload_alias(self,ctx,*cogs:typing.Optional[str]):
+        """Reloads specified cog or previously reloaded cog."""
+        command = self.bot.get_command("cog reload")
+        await ctx.invoke(command,*cogs)
