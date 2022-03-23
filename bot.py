@@ -12,7 +12,7 @@ logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=log
 TOKEN = None
 
 def no_token():
-    print("Token could not be found, it must be the first line of `TOKEN.txt`.")
+    logging.error("Token could not be found, it must be the first line of `TOKEN.txt`.")
     exit()
 
 def get_token():
@@ -34,7 +34,6 @@ class YayaBot(commands.Bot):
         intents.message_content = True # 0_0
         self.loaded_extensions = []
         self._restart = False
-        print(yaya.HelpCommand)
         super().__init__(command_prefix=self.get_prefix,intents=intents,help_command=yaya.HelpCommand())
 
     async def get_prefix(self, message):
