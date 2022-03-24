@@ -33,7 +33,6 @@ class YayaBot(commands.Bot):
         intents = discord.Intents.default()
         intents.members = True
         intents.message_content = True # 0_0
-        self.loaded_extensions = []
         self._restart = False
         super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=yaya.HelpCommand())
 
@@ -42,13 +41,15 @@ class YayaBot(commands.Bot):
 
     async def load_extension(self, name):
         await super().load_extension(name)
-        self.loaded_extensions.append(name)
-        logging.info(f"{name} loaded.")
+        logging.info(f"COG: {name} loaded.")
+
+    async def reload_extension(self, name):
+        await super().reload_extension(name)
+        logging.info(f"COG: {name} reloaded.")
 
     async def unload_extension(self, name):
         await super().unload_extension(name)
-        self.loaded_extensions.remove(name)
-        logging.info(f"{name} unloaded.")
+        logging.info(f"COG: {name} unloaded.")
 
     async def sql_init(self):
         self.connection = await aiosqlite.connect("database.db")

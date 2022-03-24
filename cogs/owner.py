@@ -17,6 +17,7 @@ class Owner(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.bot.previousReload = None
         self.connection = bot.connection
         self.emoji = "👑"
 
@@ -46,66 +47,65 @@ class Owner(commands.Cog):
 
     @commands.group(aliases = ['c'], brief=":gear:")
     @commands.is_owner()
-    async def cog(self,ctx):
+    async def cog(self, ctx):
         """Commands to add, reload and remove cogs."""
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 
+    async def check_loaded(self, cog):
+        async with self.connection.execute("SELECT count(*) FROM extensions WHERE extension = ?", (cog,)) as cursor:
+            inDb = await cursor.fetchone()
+        print(inDb)
+        inDb = inDb[0] == 1
+        loaded = cog in self.bot.extensions.keys()
+        return inDb, loaded
+
     @cog.command(aliases = ['l'], brief=":inbox_tray:")
-    async def load(self,ctx,*cogs):
+    async def load(self, ctx, *cogs):
         """Loads a cog."""
         for cog in cogs:
             cog = f"cogs.{cog}"
-            cursor = await self.connection.execute("SELECT * FROM extensions WHERE extension = ?", (cog,))
-            inDb = await cursor.fetchone()
-            inDb = (inDb is not None)
-            loadCog = (cog not in self.bot.extensions.keys())
-            if ((not loadCog) and inDb):
+            inDb, loaded = await self.check_loaded(cog)
+            if (loaded and inDb):
                 await ctx.send(f"Cog `{cog}` is already loaded.")
                 return
-            if loadCog:
+            if not loaded:
                 try:
                     await self.bot.load_extension(cog)
                 except commands.ExtensionNotFound:
                     await ctx.send(f"Cog `{cog}` could not be found.")
-                    continue
                 except:
                     await ctx.send(f"Loading cog `{cog}` failed")
                     raise
             if not inDb:
-                await cursor.execute("INSERT INTO extensions(extension) VALUES(?)", (cog,))
+                await self.connection.execute("INSERT INTO extensions(extension) VALUES(?)", (cog,))
                 await self.connection.commit()
-            await ctx.send(f"Cog `{cog}` {'loaded' if loadCog else ''}{' and ' if (loadCog and not inDb) else ''}{'added to database' if not inDb else ''}.")
-            await cursor.close()
+            await ctx.send(f"Cog `{cog}` {'loaded' if (not loaded) else ''}{' and ' if (not loaded and not inDb) else ''}{'added to database' if (not inDb) else ''}.")
 
-    @cog.command(aliases = ['u'], brief=":outbox_tray: ")
-    async def unload(self,ctx,*cogs):
+    @cog.command(aliases = ['u'], brief=":outbox_tray:")
+    async def unload(self, ctx, *cogs):
         """Unloads a cog."""
         for cog in cogs:
             if cog == 'owner':
                 await ctx.send("Cannot unload owner.")
-                return
+                continue
             cog = f"cogs.{cog}"
-            cursor = await self.connection.execute("SELECT count(*) FROM extensions WHERE extension = ?", (cog,))
-            inDb = await cursor.fetchone()
-            inDb = (inDb is not None)
-            unloadCog = (cog in self.bot.extensions.keys())
-            if not (unloadCog and inDb):
-                await ctx.send(f"Cog {cog} is not loaded.")
+            inDb, loaded = await self.check_loaded(cog)
+            if not (loaded and inDb):
+                await ctx.send(f"Cog `{cog}` is not loaded.")
                 return
-            if unloadCog:
+            if loaded:
                 try:
                     await self.bot.unload_extension(cog)
                 except:
                     await ctx.send(f"Unloading cog `{cog}` failed")
                     raise
             if inDb:
-                await cursor.execute("DELETE FROM extensions WHERE extension=?", (cog,))
+                await self.connection.execute("DELETE FROM extensions WHERE extension=?", (cog,))
                 await self.connection.commit()
-            await cursor.close()
-            await ctx.send(f"Cog {cog} {'unloaded' if unloadCog else ''}{' and ' if (unloadCog and inDb) else ''}{'removed from database' if inDb else ''}.")
+            await ctx.send(f"Cog `{cog}` {'unloaded' if loaded else ''}{' and ' if (loaded and inDb) else ''}{'removed from database' if inDb else ''}.")
 
-    @cog.command(aliases = ['r'], brief=":arrows_counterclockwise: ")
+    @cog.command(aliases = ['r'], brief=":arrows_counterclockwise:")
     async def reload(self,ctx,*cogs:typing.Optional[str]):
         """Reloads cogs."""
         allReloaded = False
@@ -116,22 +116,23 @@ class Owner(commands.Cog):
             else:
                 cogs = self.bot.previousReload
         if cogs[0] in ["*","all"]:
-            cogs = [cog.split(".")[1] for cog in self.bot.extensions.keys()]
+            cogs = list(self.bot.extensions.keys())
             allReloaded = True
+        else:
+            cogs = [f"cogs.{cog}" for cog in cogs]
         notLoaded = []
         loaded = []
         for cog in cogs:
             try:
-                await self.bot.reload_extension(f"cogs.{cog}")
+                await self.bot.reload_extension(cog)
                 logging.info(f"{cog} reloaded.")
                 loaded.append(cog)
             except commands.ExtensionNotLoaded:
                 notLoaded.append(cog)
-                continue
             except:
-                await ctx.send(f"Error while reloading {cog}.")
+                await ctx.send(f"Error while reloading `{cog}`.")
                 raise
-        await ctx.send(f"{'Cog '+', '.join(loaded)+' reloaded.' if loaded else ''}{(' Cog '+', '.join(notLoaded)+' was not found so not reloaded.') if notLoaded else ''}")
+        await ctx.send(f"{'Cog `'+'`, `'.join(loaded)+'` reloaded.' if loaded else ''}{(' Cog `'+'`, `'.join(notLoaded)+'` was not loaded so not reloaded.') if notLoaded else ''}")
         if allReloaded:
             self.bot.previousReload = ["*"]
         else:
@@ -153,10 +154,6 @@ class Owner(commands.Cog):
                     f = d.replace("/",".")[5:] + "." + f
                 if f[:-3] not in loaded_cogs and f.endswith(".py"):
                     unloaded_cogs.append("`"+f[:-3]+"`")
-
-            emojia = ":gear: "
-            emojib = ":wrench: "
-            emojic = ":tools: "
 
         embed = yaya.Embed(ctx.guild.id, bot=self.bot, title="Cogs.", emoji=":gear:")
         embed.add_field(name="Loaded Cogs:", value=", ".join(["`"+c+"`" for c in loaded_cogs])+".", emoji=":wrench:", inline=False)
