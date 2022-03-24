@@ -26,7 +26,7 @@ class HelpCommand(commands.HelpCommand):
         embed.add_field(name=command.name, value=description, emoji=emote, inline=True)
 
     async def new_help_page(self):
-        return yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title="YayaBot Help!", description=f"Say `{self.context.prefix}help <command>` for more info on a command!", emoji="❔")
+        return yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title="YayaBot Help!", description=f"Say `{self.context.prefix}help <command>` for more info on a command!", emoji="❔", timestamp=False)
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -49,7 +49,7 @@ class HelpCommand(commands.HelpCommand):
                     page = await self.new_help_page()
                     page.add_field(name=f"**{cogName}**", value=cogDesc, emoji=cogEmoji, inline=False) # Add cog field
         embeds.append(page)
-        await paged.send_paged(self.get_destination(), embeds, self.context.author)
+        await paged.send_paged(self.get_destination(), embeds, self.context.author, expire=120)
 
     async def send_command_help(self,command):
         if not isinstance(command,commands.Cog):
@@ -60,7 +60,7 @@ class HelpCommand(commands.HelpCommand):
 
         title = f"Help for {command.qualified_name}" + (" cog" if isinstance(command,commands.Cog) else ' command')
         desc = f"Aliases: {', '.join(list(command.aliases))}" if command.aliases else ""
-        embed = yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title=title, description=desc)
+        embed = yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title=title, description=desc, timestamp=False)
         
         if not isinstance(command,commands.Cog):
             value = f"`{self.context.prefix}{command.qualified_name}{(' ' + command.signature.replace('_',' ')    ) if command.signature else ' <subcommand>' if isinstance(command,commands.Group) else ''}`"

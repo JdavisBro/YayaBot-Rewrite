@@ -1,24 +1,33 @@
+import time
+from typing import Optional
+
 import discord
 from discord.ext import commands
+
+from . import timehelpers
 
 __all__ = (
     "send_paged",
     "Paged",
 )
 
-async def send_paged(ctx: discord.abc.Messageable, embeds, author, selected=0, do_footer=True):
+async def send_paged(ctx: discord.abc.Messageable, embeds, author, selected=0, do_footer=True, expire: Optional[float]=None):
     embeds[selected].set_footer(footer_text=f"Page {selected+1} of {len(embeds)}")
-    view = Paged(embeds, author, selected, do_footer)
+    view = Paged(embeds, author, selected, do_footer, expire=expire)
     await view.button_checks()
     return await ctx.send(embed=embeds[selected],view=view)
 
 class Paged(discord.ui.View):
-    def __init__(self, embeds, author, selected=0, do_footer=True, delete_button=True):
-        super().__init__()
+    def __init__(self, embeds, author, selected=0, do_footer=True, delete_button=True, expire: Optional[float]=None):
+        super().__init__(timeout=expire)
         self.embeds = embeds
         self.selected = selected
         self.do_footer = do_footer
         self.author = author
+        if expire:
+            self.expire = True
+        else:
+            self.expire = False
         if not delete_button:
             self.remove_item(delete)
 
@@ -43,7 +52,10 @@ class Paged(discord.ui.View):
             return
         self.selected = page
         await self.button_checks()
-        self.embeds[self.selected].set_footer(footer_text=f"Page {self.selected+1} of {len(self.embeds)}")
+        text = f"Page {self.selected+1} of {len(self.embeds)}"
+        if self.expire:
+            text += f" • Buttons expire after 2 minutes"
+        self.embeds[self.selected].set_footer(footer_text=text)
         await interaction.response.edit_message(embed=self.embeds[self.selected],view=self)
 
     @discord.ui.button(label="<<")
