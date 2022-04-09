@@ -121,3 +121,30 @@ class Moderation(commands.Cog):
 
         #await yaya.log(self.bot, ctx.guild, ctx.author, member, "kick", reason, datetime.datetime.now())
 
+    @commands.command(help="Softbans (bans then unbans to delete messages) the specified `member` for `reason`")
+    #@yaya.checks.is_mod()
+    @commands.has_guild_permissions(ban_members=True)
+    async def softban(self, ctx, member: discord.Member, *, reason="No reason specified"):
+        if not ctx.guild.me.guild_permissions.ban_members:
+            await ctx.send("I don't have permission to ban people.")
+            return
+        elif ctx.guild.me.top_role <= member.top_role:
+            await ctx.send("I don't have permission to ban that person.")
+            return
+
+        userEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":boot:", title=f"You have been softbanned (kicked) from {ctx.guild.name}", colour=0xff0000)
+        userEmbed.add_field(name="Softban reason:", value=reason)
+
+        try:
+            await member.send(embed=userEmbed)
+            desc = None
+        except discord.errors.HTTPException:
+            desc = "Failed to send a message to the user."
+
+        await ctx.guild.ban(member, reason=reason)
+        await ctx.guild.unban(member, reason="Softban unban.")
+
+        channelEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":boot:", title=f"Softbanned {str(member)}", colour=0x00ff00, description=desc)
+        await ctx.send(embed=channelEmbed)
+
+        #await yaya.log(self.bot, ctx.guild, ctx.author, member, "softban", reason, datetime.datetime.now())
