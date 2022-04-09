@@ -59,7 +59,7 @@ class HelpCommand(commands.HelpCommand):
             except commands.CommandError:
                 return
 
-        emoji = getattr(command, "emoji") or getattr(command, 'brief', '⚙️')
+        emoji = getattr(command, "emoji", False) or getattr(command, 'brief', '⚙️')
         title = f"Help for {emoji} {command.qualified_name}" + (" cog" if isinstance(command,commands.Cog) else ' command')
         desc = f"Aliases: {', '.join(list(command.aliases))}" if command.aliases else ""
         embed = yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title=title, description=desc, timestamp=False)
