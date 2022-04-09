@@ -93,3 +93,31 @@ class Moderation(commands.Cog):
         await ctx.send(embed=channelEmbed)
 
         #await yaya.log(self.bot, ctx.guild, ctx.author, member, "ban", reason, datetime.datetime.now())
+
+    @commands.command(help="Kicks the specified `member` for `reason`")
+    #@yaya.checks.is_mod()
+    @commands.has_guild_permissions(kick_members=True)
+    async def kick(self, ctx, member: discord.Member, *, reason="No reason specified"):
+        if not ctx.guild.me.guild_permissions.kick_members:
+            await ctx.send("I don't have permission to kick people.")
+            return
+        elif ctx.guild.me.top_role <= member.top_role:
+            await ctx.send("I don't have permission to kick that person.")
+            return
+
+        userEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":boot:", title=f"You have been kicked from {ctx.guild.name}", colour=0xff0000)
+        userEmbed.add_field(name="Kick reason:", value=reason)
+
+        try:
+            await member.send(embed=userEmbed)
+            desc = None
+        except discord.errors.HTTPException:
+            desc = "Failed to send a message to the user."
+
+        await ctx.guild.kick(member, reason=reason)
+
+        channelEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":boot:", title=f"Kicked {str(member)}", colour=0x00ff00, description=desc)
+        await ctx.send(embed=channelEmbed)
+
+        #await yaya.log(self.bot, ctx.guild, ctx.author, member, "kick", reason, datetime.datetime.now())
+
