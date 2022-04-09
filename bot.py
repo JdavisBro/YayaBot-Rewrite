@@ -75,9 +75,9 @@ class YayaBot(commands.Bot):
     async def setup_hook(self):
         await self.sql_init()
         await self.load_extensions()
-        self.startTime = time.time()
 
     async def on_ready(self):
+        self.startTime = time.time()
         logging.info("Connected!")
 
     async def on_command_error(self, ctx, error):

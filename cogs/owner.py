@@ -38,13 +38,6 @@ class Owner(commands.Cog):
         await ctx.send("🏃‍♂️ Be right back!")
         await self.bot.restart()
 
-    @commands.command(brief=":muscle:")
-    async def embed_test(self, ctx):
-        embed = yaya.Embed(ctx.guild.id, bot=self.bot, title="Test.", emoji=":gear:")
-        embed.add_field(name="Status:", value="*beatboxing wildly*", emoji=":wrench:")
-        embed.add_field(name="Boxes:", value="eaten", emoji=":tools:")
-        await ctx.send(embed=embed)
-
     @commands.group(aliases = ['c'], brief=":gear:")
     @commands.is_owner()
     async def cog(self, ctx):
@@ -138,7 +131,7 @@ class Owner(commands.Cog):
         else:
             self.bot.previousReload = loaded
 
-    @cog.command(name="list",aliases=["ls"], brief=":gear: ")
+    @cog.command(name="list",aliases=["ls"], brief=":gear:")
     async def cogs_list(self,ctx):
         """Lists loaded and unloaded cogs."""
         loaded_cogs = ['.'.join(cog.split(".")[1:]) for cog in self.bot.loaded_extensions]
@@ -160,7 +153,7 @@ class Owner(commands.Cog):
         embed.add_field(name="Unloaded Cogs:", value=", ".join(unloaded_cogs)+".", emoji=":tools:", inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command(name="reload", brief=":arrows_counterclockwise: ")
+    @commands.command(name="reload", brief=":arrows_counterclockwise:")
     @commands.is_owner()
     async def reload_alias(self,ctx,*cogs:typing.Optional[str]):
         """Reloads specified cog or previously reloaded cog."""

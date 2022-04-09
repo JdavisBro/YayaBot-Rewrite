@@ -16,7 +16,7 @@ class Embed(discord.Embed):
         # check for guild specific settings
         if not ("colour" in kwargs or "color" in kwargs):
             kwargs["colour"] = discord.Colour.blurple() # get guild default instead
-        self.emojis = True
+        self.emojis = True # get guild default instead
 
         if timestamp:
             kwargs["timestamp"] = datetime.utcnow()
@@ -29,8 +29,8 @@ class Embed(discord.Embed):
         if default_footer:
             self.set_footer(footer_text=footer_text)
 
-    def set_footer(self, *args, default_footer: bool=True, footer_text: str=None, **kwargs):
-        """footer_text only does something with default_footer is used"""
+    def set_footer(self, text: str=None, default_footer: bool=True, **kwargs):
+        """When `default_footer` is true, `text` is added onto it. Otherwise usual discord.py footer is made."""
         if default_footer:
             if self.bot:
                 footer = self.bot.user.name
@@ -38,11 +38,11 @@ class Embed(discord.Embed):
             else:
                 footer = "YayaBot"
                 url = None
-            if footer_text:
-                footer += f" - {footer_text}"
+            if text:
+                footer += f" - {text}"
             super().set_footer(text=footer, icon_url=url)
         else:
-            super().set_footer(*args, **kwargs)
+            super().set_footer(text, **kwargs)
 
     def add_field(self, name: str, value: str, emoji: Optional[Union[str, discord.Emoji, discord.PartialEmoji]]=None, inline=True):
         if self.emojis and emoji:
