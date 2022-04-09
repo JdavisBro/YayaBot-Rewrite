@@ -62,7 +62,7 @@ class Moderation(commands.Cog):
         await ctx.channel.delete_messages(messages, reason=f"Purge by {ctx.author} ({ctx.author.id})")
         await ctx.send(f"✅ Purged {len(messages)} messages!", delete_after=2)
 
-    @commands.command(help="Bans the specified `member` for `reason` and deletes `delete message days` worth of days (between 0 and 7)", brief=":hammer:")
+    @commands.command(help="Bans the specified `member` for `reason` and deletes `delete message days` worth of messages (between 0 and 7)", brief=":hammer:")
     #@yaya.checks.is_mod()
     @commands.has_guild_permissions(ban_members=True) # temporary so randoms don't ban people in the test server lol.
     async def ban(self, ctx, member: discord.Member, delete_message_days=0, *, reason="No reason specified"):
