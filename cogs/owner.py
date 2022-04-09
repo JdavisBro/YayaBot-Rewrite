@@ -111,7 +111,7 @@ class Owner(commands.Cog):
         if cogs[0] in ["*","all"]:
             cogs = list(self.bot.extensions.keys())
             allReloaded = True
-        else:
+        elif not cogs[0].startswith("cogs."):
             cogs = [f"cogs.{cog}" for cog in cogs]
         notLoaded = []
         loaded = []
