@@ -95,6 +95,28 @@ class Moderation(commands.Cog):
 
         #await yaya.log(self.bot, ctx.guild, ctx.author, member, "ban", reason, datetime.datetime.now())
 
+    @commands.command(help="Unbans the `userid`", brief=":key:")
+    #@yaya.checks.is_mod()
+    @commands.has_guild_permissions(ban_members=True)
+    async def unban(self, ctx, userid: int, reason="No reason specified"):
+        if not ctx.guild.me.guild_permissions.ban_members:
+            await ctx.send("I don't have permission to unban people.")
+
+        try:
+            user = await ctx.guild.fetch_ban(discord.Object(userid))
+            user = user.user
+        except discord.NotFound:
+            notBannedEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":x:", title="This user is not banned.")
+            await ctx.send(embed=notBannedEmbed)
+            return
+
+        await ctx.guild.unban(user, reason=reason)
+
+        channelEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":white_check_mark:", title=f"Unbanned {str(user)}", colour=0x00ff00)
+        await ctx.send(embed=channelEmbed)
+
+        #await yaya.log(self.bot, ctx.guild, ctx.author, user, "unban", reason, datetime.datetime.now())
+
     @commands.command(help="Kicks the specified `member` for `reason`", brief=":boot:")
     #@yaya.checks.is_mod()
     @commands.has_guild_permissions(kick_members=True)
