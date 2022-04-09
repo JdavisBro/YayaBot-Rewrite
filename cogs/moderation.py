@@ -34,6 +34,7 @@ class Moderation(commands.Cog):
 
     @commands.group(help="Purge messages.", brief=":x:") # TODO?: alternate purge command that doesn't bulk delete and so can delete messages from 14+ days ago
     #@yaya.checks.is_mod()
+    @commands.has_permissions(manage_messages=True)
     async def purge(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
@@ -94,7 +95,7 @@ class Moderation(commands.Cog):
 
         #await yaya.log(self.bot, ctx.guild, ctx.author, member, "ban", reason, datetime.datetime.now())
 
-    @commands.command(help="Kicks the specified `member` for `reason`")
+    @commands.command(help="Kicks the specified `member` for `reason`", brief=":boot:")
     #@yaya.checks.is_mod()
     @commands.has_guild_permissions(kick_members=True)
     async def kick(self, ctx, member: discord.Member, *, reason="No reason specified"):
@@ -121,7 +122,7 @@ class Moderation(commands.Cog):
 
         #await yaya.log(self.bot, ctx.guild, ctx.author, member, "kick", reason, datetime.datetime.now())
 
-    @commands.command(help="Softbans (bans then unbans to delete messages) the specified `member` for `reason`")
+    @commands.command(help="Softbans (bans then unbans to delete messages) the specified `member` for `reason`", brief=":wastebasket:")
     #@yaya.checks.is_mod()
     @commands.has_guild_permissions(ban_members=True)
     async def softban(self, ctx, member: discord.Member, *, reason="No reason specified"):
