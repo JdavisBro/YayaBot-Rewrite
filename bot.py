@@ -59,6 +59,7 @@ class YayaBot(commands.Bot):
     async def load_extensions(self):
         default_extensions = [ # They are tuples for SQL
             ("cogs.owner",),
+            ("cogs.moderation",)
         ]
         async with self.connection.execute("SELECT * FROM extensions") as cursor:
             extensions = await cursor.fetchall()
@@ -78,10 +79,42 @@ class YayaBot(commands.Bot):
 
     async def on_ready(self):
         self.startTime = time.time()
+        appinfo = await bot.application_info()
+        self.owner = appinfo.owner
         logging.info("Connected!")
 
     async def on_command_error(self, ctx, error):
-        raise error
+        if hasattr(ctx.command, 'on_error'):
+            return
+        error = getattr(error, 'original', error)
+
+        if isinstance(error, commands.CommandNotFound): # Perhaps make these toggleable by guild settings
+            await ctx.message.add_reaction("❓")
+        elif isinstance(error, commands.CheckFailure):
+            await ctx.message.add_reaction("🚫")
+
+        elif isinstance(error, commands.MemberNotFound):
+            await ctx.send(f"User `{error.argument}` could not be found")
+        elif isinstance(error, commands.RoleNotFound):
+            await ctx.send(f"Role `{error.argument}` could not be found")
+
+        elif isinstance(error, commands.MissingRequiredArgument):
+            commandUsageLine = f"{ctx.prefix}{ctx.command.qualified_name} {ctx.command.signature}"
+            paramLocation = commandUsageLine.index("<" + error.param.name + ">")
+            paramLength = len(error.param.name) + 2
+            await ctx.send(f"```{commandUsageLine}\n{' '*paramLocation}{'^'*paramLength}\n{str(error)}```")
+
+        elif isinstance(error, commands.MissingPermissions):
+            await ctx.send("You don't have permission to run that command.")
+        elif isinstance(error, discord.errors.Forbidden):
+            await ctx.send("Something went wrong, I may be missing a permission.")
+
+        elif isinstance(error, commands.ExpectedClosingQuoteError):
+            await ctx.send("Your command aguments are inputted incorrectly. You are missing a closing `\"`")
+
+        else:
+            await ctx.send("Something has gone wrong somewhere!" if bot.owner != ctx.author else "An Error Occured! " + str(error))
+            raise error
 
     async def close(self):
         await self.connection.close()
