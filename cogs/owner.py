@@ -118,7 +118,6 @@ class Owner(commands.Cog):
         for cog in cogs:
             try:
                 await self.bot.reload_extension(cog)
-                logging.info(f"{cog} reloaded.")
                 loaded.append(cog)
             except commands.ExtensionNotLoaded:
                 notLoaded.append(cog)
