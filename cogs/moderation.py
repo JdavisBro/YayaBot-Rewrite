@@ -95,7 +95,7 @@ class Moderation(commands.Cog):
 
         #await yaya.log(self.bot, ctx.guild, ctx.author, member, "ban", reason, datetime.datetime.now())
 
-    @commands.command(help="Unbans the `userid`", brief=":key:")
+    @commands.command(help="Unbans the user `userid`", brief=":key:")
     #@yaya.checks.is_mod()
     @commands.has_guild_permissions(ban_members=True)
     async def unban(self, ctx, userid: int, reason="No reason specified"):
