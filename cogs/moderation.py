@@ -24,9 +24,9 @@ class Moderation(commands.Cog):
 
     async def get_purge_messages(self, channel, limit, check=None):
         messages = []
-        now = datetime.datetime.utcnow()
+        now = discord.utils.utcnow()
         async for message in channel.history(limit=limit):
-            if now - message.created_at.replace(tzinfo=None) > datetime.timedelta(days=14):
+            if now - message.created_at > datetime.timedelta(days=14):
                 break # Older than 14 days
             if not check or check(message):
                 messages.append(message)
