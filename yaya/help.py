@@ -26,7 +26,7 @@ class HelpCommand(commands.HelpCommand):
         embed.add_field(name=command.name, value=description, emoji=emote, inline=True)
 
     async def new_help_page(self):
-        return yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title="YayaBot Help!", description=f"Say `{self.context.prefix}help <command>` for more info on a command!", emoji="❔", timestamp=False)
+        return yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title="YayaBot Help!", description=f"Say `{self.context.clean_prefix}help <command>` for more info on a command!", emoji="❔", timestamp=False)
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -65,10 +65,10 @@ class HelpCommand(commands.HelpCommand):
         embed = yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title=title, description=desc, timestamp=False)
         
         if not isinstance(command,commands.Cog):
-            value = f"`{self.context.prefix}{command.qualified_name}{(' ' + command.signature.replace('_',' ')    ) if command.signature else ' <subcommand>' if isinstance(command,commands.Group) else ''}`"
+            value = f"`{self.context.clean_prefix}{command.qualified_name}{(' ' + command.signature.replace('_',' ')    ) if command.signature else ' <subcommand>' if isinstance(command,commands.Group) else ''}`"
             embed.add_field(name="Usage",value=value, emoji=":screwdriver:")
         
-        value = command.help.replace("[p]", self.context.prefix) if command.help else '...'
+        value = command.help.replace("[p]", self.context.clean_prefix) if command.help else '...'
         embed.add_field(name="Description", value=value, emoji=":scroll:", inline=False)
         
         if isinstance(command,commands.Group) or isinstance(command,commands.Cog):
