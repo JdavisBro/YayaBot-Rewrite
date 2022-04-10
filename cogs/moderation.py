@@ -187,7 +187,52 @@ class Moderation(commands.Cog):
 
         await yaya.log(self.bot, ctx.guild, ctx.author, member, "softban", reason, datetime.datetime.now())
 
+    @commands.command(help="Get modlogs for a specific `member`, and goes to `page number`.s", brief=":file_folder:")
+    #@yaya.checks.is_mod()
+    async def modlogs(self, ctx, member: discord.Member, page_number: int=1):
+        async with ctx.channel.typing():
+            async with await self.connection.execute("SELECT * FROM caselog WHERE user=? AND guild=?", (member.id, ctx.guild.id)) as cursor:
+                logs = await cursor.fetchall()
+
+            if not logs:
+                await ctx.send("❎ That user does not have any modlogs!")
+
+            def new_embed():
+                return yaya.Embed(ctx.guild, self.bot, emoji=":open_file_folder:", title=f"{str(member)}'s Modlogs")
+
+            embeds = []
+            embed = new_embed()
+
+            for log in logs:
+                mod = await self.bot.fetch_user(log[7])
+                start = yaya.time.DiscordTimestamp(log[5])
+                if log[6] != -1:
+                    end = yaya.time.DiscordTimestamp(log[6])
+                else:
+                    end = False
+                if len(embed.fields) >= 6:
+                    embeds.append(embed)
+                    embed = new_embed()
+                embed.add_field(
+                    emoji=":notepad_spiral:", name=f"***Case {str(log[1])}***", inline=False,
+                    value=(
+                        ((":page_facing_up:" if embed.emojis else '') + f"**Type:** {log[3]}\n") +
+                        ((":pencil2:" if embed.emojis else '') + f"**Reason:** {log[4]}\n") +
+                        ((":cop:" if embed.emojis else '') + f"**Moderator:** {str(mod)}\n") +
+                        ((":clock3:" if embed.emojis else '') + f"**Time:** {start.relative} ({start.date_time_full})\n") +
+                        ((":stopwatch:" if embed.emojis else '') + f"**Ends:** {end.relative} ({end.date_time_full}" if end else '')
+                    ).rstrip()
+                )
+
+            embeds.append(embed)
+        
+        if len(embeds) > 1:
+            await yaya.send_paged(ctx, embeds, ctx.author, page_number-1, expire=120)
+        else:
+            await ctx.send(embed=embed)
+
     @commands.command(help="Gets info on a specific `caseid`", brief=":briefcase:")
+    #@yaya.checks.is_mod()
     async def case(self, ctx, caseid: int):
         case: yaya.ModLog = await yaya.get_log(self.bot, ctx.guild, caseid)
         
