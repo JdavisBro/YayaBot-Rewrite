@@ -100,6 +100,8 @@ class YayaBot(commands.Bot):
             await ctx.send(f"User `{error.argument}` could not be found")
         elif isinstance(error, commands.RoleNotFound):
             await ctx.send(f"Role `{error.argument}` could not be found")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("The value for agument `"+str(error)[str(error).rfind('r "')+3:-2]+"` is incorrect, you may have put letters in a number.")
 
         elif isinstance(error, commands.MissingRequiredArgument):
             commandUsageLine = f"{ctx.prefix}{ctx.command.qualified_name} {ctx.command.signature}"
