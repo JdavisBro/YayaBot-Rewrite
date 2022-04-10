@@ -103,7 +103,7 @@ class Owner(commands.Cog):
         """Reloads cogs."""
         allReloaded = False
         if not cogs:
-            if self.bot.previousReload is None:
+            if not self.bot.previousReload:
                 await ctx.send("Please specify a cog!")
                 return
             else:
