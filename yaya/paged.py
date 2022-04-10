@@ -12,7 +12,7 @@ __all__ = (
 )
 
 async def send_paged(ctx: discord.abc.Messageable, embeds, author, selected=0, do_footer=True, expire: Optional[float]=None):
-    embeds[selected].set_footer(footer_text=f"Page {selected+1} of {len(embeds)}")
+    embeds[selected].set_footer(text=f"Page {selected+1} of {len(embeds)}" + (" • Buttons expire after 2 minutes" if expire else ""))
     view = Paged(embeds, author, selected, do_footer, expire=expire)
     await view.button_checks()
     return await ctx.send(embed=embeds[selected],view=view)
