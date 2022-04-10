@@ -187,7 +187,7 @@ class Moderation(commands.Cog):
 
         await yaya.log(self.bot, ctx.guild, ctx.author, member, "softban", reason, datetime.datetime.now())
 
-    @commands.command()
+    @commands.command(help="Gets info on a specific `caseid`", brief=":briefcase:")
     async def case(self, ctx, caseid: int):
         case: yaya.ModLog = await yaya.get_log(self.bot, ctx.guild, caseid)
         
