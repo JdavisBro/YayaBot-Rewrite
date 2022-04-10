@@ -53,10 +53,11 @@ class Paged(discord.ui.View):
             return
         self.selected = page
         await self.button_checks()
-        text = f"Page {self.selected+1} of {len(self.embeds)}"
-        if self.expire:
-            text += f" • Buttons expire after 2 minutes"
-        self.embeds[self.selected].set_footer(footer_text=text)
+        if self.do_footer:
+            text = f"Page {self.selected+1} of {len(self.embeds)}"
+            if self.expire:
+                text += f" • Buttons expire after 2 minutes"
+            self.embeds[self.selected].set_footer(text=text)
         self.timeout = self.expireDefault
         await interaction.response.edit_message(embed=self.embeds[self.selected],view=self)
 
