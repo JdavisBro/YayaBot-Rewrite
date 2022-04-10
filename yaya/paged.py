@@ -28,6 +28,7 @@ class Paged(discord.ui.View):
             self.expire = True
         else:
             self.expire = False
+        self.expireDefault = expire
         if not delete_button:
             self.remove_item(delete)
 
@@ -56,25 +57,26 @@ class Paged(discord.ui.View):
         if self.expire:
             text += f" • Buttons expire after 2 minutes"
         self.embeds[self.selected].set_footer(footer_text=text)
+        self.timeout = self.expireDefault
         await interaction.response.edit_message(embed=self.embeds[self.selected],view=self)
 
     @discord.ui.button(label="<<")
-    async def begin(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def begin(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.set_page(0, interaction)
 
     @discord.ui.button(label="<")
-    async def previous(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.set_page(self.selected-1, interaction)
 
     @discord.ui.button(label=">")
-    async def next(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.set_page(self.selected+1, interaction)
 
     @discord.ui.button(label=">>")
-    async def last(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def last(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.set_page(len(self.embeds)-1, interaction)
 
     @discord.ui.button(label="X", style=discord.ButtonStyle.red)
-    async def delete(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def delete(self, interaction: discord.Interaction, button: discord.ui.Button):
         msg = await interaction.message.delete()
         self.stop()
