@@ -234,7 +234,14 @@ class Moderation(commands.Cog):
     @commands.command(help="Gets info on a specific `caseid`", brief=":briefcase:")
     #@yaya.checks.is_mod()
     async def case(self, ctx, caseid: int):
+        if caseid < 1:
+            await ctx.send("That is not a valid case id.")
+
         case: yaya.ModLog = await yaya.get_log(self.bot, ctx.guild, caseid)
+
+        if not case:
+            await ctx.send("There isn't a case with that id.")
+            return
         
         embed = yaya.Embed(ctx.guild, self.bot, emoji=":notepad_spiral:", title=f"Case {str(caseid)}")
         

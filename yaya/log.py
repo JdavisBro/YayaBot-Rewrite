@@ -100,6 +100,8 @@ async def log(bot: commands.Bot, guild: discord.Guild, moderator: discord.Member
 async def get_log(bot: commands.Bot, guild: discord.Guild, id: int):
     async with bot.connection.execute("SELECT * FROM caselog WHERE guild=? AND id=?", (guild.id, id)) as cursor:
         logdata = await cursor.fetchone()
+    if logdata is None:
+        return None
     return ModLog(bot, guild, id, logdata[7], logdata[2], logdata[3], logdata[4], logdata[5], logdata[6])
 
 class ModLog():
