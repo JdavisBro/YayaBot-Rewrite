@@ -27,7 +27,7 @@ class Embed(discord.Embed):
         super().__init__(**kwargs)
 
         if default_footer:
-            self.set_footer(footer_text=footer_text)
+            self.set_footer(text=footer_text)
 
     def set_footer(self, text: str=None, default_footer: bool=True, **kwargs):
         """When `default_footer` is true, `text` is added onto it. Otherwise usual discord.py footer is made."""
