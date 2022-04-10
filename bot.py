@@ -29,6 +29,8 @@ def get_token():
     return token
 
 class YayaBot(commands.Bot):
+    connection: aiosqlite.Connection
+
     def __init__(self):
         intents = discord.Intents.default()
         intents.members = True
@@ -54,6 +56,7 @@ class YayaBot(commands.Bot):
     async def sql_init(self):
         self.connection = await aiosqlite.connect("database.db")
         await self.connection.execute("CREATE TABLE IF NOT EXISTS extensions (extension TEXT PRIMARY KEY)")
+        await self.connection.execute("CREATE TABLE IF NOT EXISTS caselog (guild INTEGETER, id INTEGER, user INTEGER, type TEXT, reason TEXT, start FLOAT, end FLOAT, moderator INTEGER)")
         await self.connection.commit()
 
     async def load_extensions(self):

@@ -44,6 +44,11 @@ class Moderation(commands.Cog):
         messages = await self.get_purge_messages(ctx.channel, number+1)
         await ctx.channel.delete_messages(messages, reason=f"Purge by {ctx.author} ({ctx.author.id})")
         await ctx.send(f"✅ Purged {len(messages)-1} messages!", delete_after=2)
+        await yaya.log_message(
+            self.bot, ctx.guild, "purge", moderator=ctx.author,
+            extra=f":notepad_spiral: Purged: {number} messages\n:fire: Messages Deleted: {len(messages)-1}\n",
+            extraEmojiless=f"Purged: {number} messages\nMessages Deleted: {len(messages)-1}\n"
+        )
 
     @purge.command(name="match", aliases=["m"], brief=":abcd:", help="Out of the last `limit` messages, deletes those that contain `filtered`.")
     async def purge_match(self, ctx, limit: int, *, filtered):
@@ -53,6 +58,11 @@ class Moderation(commands.Cog):
         messages = await self.get_purge_messages(ctx.channel, limit, check=check)
         await ctx.channel.delete_messages(messages, reason=f"Purge by {ctx.author} ({ctx.author.id})")
         await ctx.send(f"✅ Purged {len(messages)} messages!", delete_after=2)
+        await yaya.log_message(
+            self.bot, ctx.guild, "purge", moderator=ctx.author,
+            extra=f":notepad_spiral: Purged: Matches `{filtered}`\n:fire: Messages Deleted: {len(messages)}\n",
+            extraEmojiless=f"Purged: Matches `{filtered}`\nMessages Deleted: {len(messages)}\n"
+        )
 
     @purge.command(name="commands", aliases=["c","command"], brief=":robot:", help="Out of the last `limit` messages, deletes messages by the bot and messages starting with the bot prefix")
     async def purge_commands(self, ctx, limit: int):
@@ -62,6 +72,11 @@ class Moderation(commands.Cog):
         messages = await self.get_purge_messages(ctx.channel, limit, check=check)
         await ctx.channel.delete_messages(messages, reason=f"Purge by {ctx.author} ({ctx.author.id})")
         await ctx.send(f"✅ Purged {len(messages)} messages!", delete_after=2)
+        await yaya.log_message(
+            self.bot, ctx.guild, "purge", moderator=ctx.author,
+            extra=f":notepad_spiral: Purged: Bot Commands\n:fire: Messages Deleted: {len(messages)}\n",
+            extraEmojiless=f"Purged: Bot Commands\nMessages Deleted: {len(messages)}\n"
+        )
 
     @commands.command(help="Bans the specified `member` for `reason` and deletes `delete message days` worth of messages (between 0 and 7)", brief=":hammer:")
     #@yaya.checks.is_mod()
@@ -93,7 +108,7 @@ class Moderation(commands.Cog):
         channelEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":hammer:", title=f"Banned {str(member)}", colour=0x00ff00, description=desc)
         await ctx.send(embed=channelEmbed)
 
-        #await yaya.log(self.bot, ctx.guild, ctx.author, member, "ban", reason, datetime.datetime.now())
+        await yaya.log(self.bot, ctx.guild, ctx.author, member, "ban", reason, datetime.datetime.now())
 
     @commands.command(help="Unbans the user `userid`", brief=":key:")
     #@yaya.checks.is_mod()
@@ -115,7 +130,7 @@ class Moderation(commands.Cog):
         channelEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":white_check_mark:", title=f"Unbanned {str(user)}", colour=0x00ff00)
         await ctx.send(embed=channelEmbed)
 
-        #await yaya.log(self.bot, ctx.guild, ctx.author, user, "unban", reason, datetime.datetime.now())
+        await yaya.log(self.bot, ctx.guild, ctx.author, user, "unban", reason, datetime.datetime.now())
 
     @commands.command(help="Kicks the specified `member` for `reason`", brief=":boot:")
     #@yaya.checks.is_mod()
@@ -142,7 +157,7 @@ class Moderation(commands.Cog):
         channelEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":boot:", title=f"Kicked {str(member)}", colour=0x00ff00, description=desc)
         await ctx.send(embed=channelEmbed)
 
-        #await yaya.log(self.bot, ctx.guild, ctx.author, member, "kick", reason, datetime.datetime.now())
+        await yaya.log(self.bot, ctx.guild, ctx.author, member, "kick", reason, datetime.datetime.now())
 
     @commands.command(help="Softbans (bans then unbans to delete messages) the specified `member` for `reason`", brief=":wastebasket:")
     #@yaya.checks.is_mod()
@@ -170,4 +185,28 @@ class Moderation(commands.Cog):
         channelEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":boot:", title=f"Softbanned {str(member)}", colour=0x00ff00, description=desc)
         await ctx.send(embed=channelEmbed)
 
-        #await yaya.log(self.bot, ctx.guild, ctx.author, member, "softban", reason, datetime.datetime.now())
+        await yaya.log(self.bot, ctx.guild, ctx.author, member, "softban", reason, datetime.datetime.now())
+
+    @commands.command()
+    async def case(self, ctx, caseid: int):
+        case: yaya.ModLog = await yaya.get_log(self.bot, ctx.guild, caseid)
+        
+        embed = yaya.Embed(ctx.guild, self.bot, emoji=":notepad_spiral:", title=f"Case {str(caseid)}")
+        
+        if isinstance(case.user, discord.Object):
+            case.user = await self.bot.fetch_user(case.user.id)
+        if isinstance(case.moderator, discord.Object):
+            case.moderator = await self.bot.fetch_user(case.moderator.id)
+        startTimestamp = yaya.time.DiscordTimestamp(case.start)
+        
+        embed.add_field(name="User:", value=str(case.user), emoji=":child:")
+        embed.add_field(name="Type:", value=case.type, emoji=":page_facing_up:")
+        embed.add_field(name="Time:", value=f"{startTimestamp.relative} ({startTimestamp.date_time_full})", emoji=":clock3:", inline=False)
+        if case.end:
+            endTimestamp = yaya.time.DiscordTimestamp(case.end)
+            embed.add_field(name="Ends:", value=f"{endTimestamp.relative} ({endTimestamp.date_time_full})", emoji=":stopwatch:", inline=False)
+        embed.add_field(name="Reason:", value=case.reason, emoji=":pencil2:")
+        embed.add_field(name="Moderator:", value=str(case.moderator), emoji=":cop:")
+        embed.set_thumbnail(url=case.user.avatar.url)
+
+        await ctx.send(embed=embed)
