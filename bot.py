@@ -96,6 +96,16 @@ class YayaBot(commands.Bot):
         elif isinstance(error, commands.CheckFailure):
             await ctx.message.add_reaction("🚫")
 
+        elif isinstance(error, commands.BadUnionArgument):
+            typeText = {discord.Member: "User",discord.User: "User",discord.Role: "Role",discord.TextChannel: "Channel"}
+            types = []
+            userInput = ""
+            for i, v in enumerate(error.converters):
+                if not userInput:
+                    userInput = getattr(error.errors[i],"argument","")
+                if v in typeText:
+                    types.append(typeText[v])
+            await ctx.send(f"{', '.join(types)} `{userInput}` could not be found.")
         elif isinstance(error, commands.MemberNotFound):
             await ctx.send(f"User `{error.argument}` could not be found")
         elif isinstance(error, commands.RoleNotFound):
