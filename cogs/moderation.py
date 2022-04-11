@@ -111,16 +111,15 @@ class Moderation(commands.Cog):
 
         await yaya.log(self.bot, ctx.guild, ctx.author, member, "ban", reason, datetime.datetime.now())
 
-    @commands.command(help="Unbans the user `userid`", brief=":key:")
+    @commands.command(help="Unbans the specified `user`", brief=":key:")
     #@yaya.checks.is_mod()
     @commands.has_guild_permissions(ban_members=True)
-    async def unban(self, ctx, userid: int, reason="No reason specified"):
+    async def unban(self, ctx, user: discord.User, reason="No reason specified"):
         if not ctx.guild.me.guild_permissions.ban_members:
             await ctx.send("I don't have permission to unban people.")
 
         try:
-            user = await ctx.guild.fetch_ban(discord.Object(userid))
-            user = user.user
+            await ctx.guild.fetch_ban(user)
         except discord.NotFound:
             notBannedEmbed = yaya.Embed(ctx.guild, bot=self.bot, emoji=":x:", title="This user is not banned.")
             await ctx.send(embed=notBannedEmbed)
@@ -188,7 +187,7 @@ class Moderation(commands.Cog):
 
         await yaya.log(self.bot, ctx.guild, ctx.author, member, "softban", reason, datetime.datetime.now())
 
-    @commands.command(help="Get modlogs for a specific `member`, and goes to `page number`.s", brief=":file_folder:")
+    @commands.command(help="Get modlogs for a specific `member`, and goes to `page number`", brief=":file_folder:")
     #@yaya.checks.is_mod()
     async def modlogs(self, ctx, member: Union[discord.Member, int], page_number: int=1):
         async with ctx.channel.typing():
