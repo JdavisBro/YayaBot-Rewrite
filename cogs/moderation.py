@@ -1,5 +1,6 @@
 import logging
 import datetime
+from typing import Union
 
 import discord
 from discord.ext import commands
@@ -189,16 +190,18 @@ class Moderation(commands.Cog):
 
     @commands.command(help="Get modlogs for a specific `member`, and goes to `page number`.s", brief=":file_folder:")
     #@yaya.checks.is_mod()
-    async def modlogs(self, ctx, member: discord.Member, page_number: int=1):
+    async def modlogs(self, ctx, member: Union[discord.Member, int], page_number: int=1):
         async with ctx.channel.typing():
-            async with await self.connection.execute("SELECT * FROM caselog WHERE user=? AND guild=?", (member.id, ctx.guild.id)) as cursor:
+            memberName = str(member)
+            member = getattr(member, "id", member)
+            async with await self.connection.execute("SELECT * FROM caselog WHERE user=? AND guild=?", (member, ctx.guild.id)) as cursor:
                 logs = await cursor.fetchall()
 
             if not logs:
                 await ctx.send("❎ That user does not have any modlogs!")
 
             def new_embed():
-                return yaya.Embed(ctx.guild, self.bot, emoji=":open_file_folder:", title=f"{str(member)}'s Modlogs")
+                return yaya.Embed(ctx.guild, self.bot, emoji=":open_file_folder:", title=f"{str(memberName)}'s Modlogs")
 
             embeds = []
             embed = new_embed()
