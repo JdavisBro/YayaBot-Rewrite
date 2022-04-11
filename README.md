@@ -24,3 +24,13 @@ put your bot token in TOKEN.txt
 and run simply with
 
 `py bot.py`
+
+# Vscode Setup
+
+Files edited here will be in `.vscode`
+
+Edit your `launch.json` to the program be `${workspaceFolder}\\bot.py`
+This will make you easily able to launch bot.py while editing a cog or something else
+
+Edit your `settings.json` to have `"python.autoComplete.extraPaths": ["${workspaceFolder}/"]` in it, make sure it's correctly json formatted and stuff.
+This will add autocomplete for the yaya module

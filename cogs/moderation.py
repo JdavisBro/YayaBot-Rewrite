@@ -40,7 +40,7 @@ class Moderation(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 
-    @purge.command(name="number", aliases=["n","num"], brief=":1234:", help="Purges the specified amount of messages from the chat")
+    @purge.command(name="number", aliases=["n","num"], brief=":1234:", help="Purges the specified `number` of messages from the chat")
     async def purge_number(self, ctx, number: int):
         messages = await self.get_purge_messages(ctx.channel, number+1)
         await ctx.channel.delete_messages(messages, reason=f"Purge by {ctx.author} ({ctx.author.id})")
