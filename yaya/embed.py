@@ -8,7 +8,7 @@ __all__ = (
 )
 
 class Embed(discord.Embed):
-    def __init__(self, guild: Union[int, discord.Guild], bot=None, emoji: Optional[Union[str, discord.Emoji, discord.PartialEmoji]]=None, default_footer: bool=True, footer_text: str=None, timestamp: bool=True, **kwargs):
+    def __init__(self, guild: Union[int, discord.Guild], bot=None, emoji: Optional[Union[str, discord.Emoji, discord.PartialEmoji]]=None, default_footer: bool=True, footer_text: str=None, auto_timestamp: bool=True, **kwargs):
         self.bot = bot
         
         if isinstance(guild, discord.Guild):
@@ -18,7 +18,7 @@ class Embed(discord.Embed):
             kwargs["colour"] = discord.Colour.blurple() # get guild default instead
         self.emojis = True # get guild default instead
 
-        if timestamp:
+        if auto_timestamp and not "timestamp" in kwargs:
             kwargs["timestamp"] = datetime.utcnow()
 
         if "title" in kwargs and emoji and self.emojis:
