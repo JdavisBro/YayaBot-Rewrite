@@ -133,7 +133,7 @@ class Owner(commands.Cog):
     @cog.command(name="list",aliases=["ls"], brief=":gear:")
     async def cogs_list(self,ctx):
         """Lists loaded and unloaded cogs."""
-        loaded_cogs = ['.'.join(cog.split(".")[1:]) for cog in self.bot.loaded_extensions]
+        loaded_cogs = ['.'.join(cog.split(".")[1:]) for cog in self.bot.extensions]
         unloaded_cogs = []
         visited = []
         for d, _, files in os.walk("cogs",followlinks=True):
