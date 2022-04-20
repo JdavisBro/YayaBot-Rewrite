@@ -26,7 +26,7 @@ class HelpCommand(commands.HelpCommand):
         embed.add_field(name=command.name, value=description, emoji=emote, inline=True)
 
     async def new_help_page(self):
-        return yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title="YayaBot Help!", description=f"Say `{self.context.clean_prefix}help <command>` for more info on a command!", emoji="❔", timestamp=False)
+        return yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title="YayaBot Help!", description=f"Say `{self.context.clean_prefix}help <command>` for more info on a command!", emoji="❔", auto_timestamp=False)
 
     async def send_bot_help(self, mapping):
         embeds = []
@@ -59,7 +59,7 @@ class HelpCommand(commands.HelpCommand):
             except commands.CommandError:
                 return
 
-        emoji = (getattr(command, "emoji", False) or getattr(command, 'brief', '⚙️')) + " "
+        emoji = (getattr(command, "emoji", False) or getattr(command, 'brief', False) or '⚙️') + " "
         title = f"Help for +EMOJIHERE+{command.qualified_name}" + (" cog" if isinstance(command,commands.Cog) else ' command')
         desc = f"Aliases: {', '.join(list(command.aliases))}" if command.aliases else ""
         embed = yayaembed.Embed(self.context.guild.id, bot=self.context.bot, title=title, description=desc, auto_timestamp=False)

@@ -110,7 +110,6 @@ class Paged(discord.ui.View):
     async def change_page_one(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(ChoosePageModal(self))
 
-
     @discord.ui.button(label=" ", row=1, disabled=True)
     async def filler_one(self, interaction: discord.Interaction, button: discord.ui.Button):
         pass
